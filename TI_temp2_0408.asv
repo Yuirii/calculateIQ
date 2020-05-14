@@ -1,0 +1,97 @@
+
+    close all; clear all; clc;
+
+%     fileFold = 'D:\softwares\matlab\workdata\';
+%     filename =  [fileFold sprintf('%dus 1MHz %d°.log',4,90)];
+% %     filename = [fileFold '1.log'];
+    
+    fileFold = 'D:\softwares\matlab\workdata\E4438C packets\';
+%     fileFold='D:\softwares\matlab\workdata\TI packets\';
+    filename =  [fileFold sprintf('%d.log',4)];
+
+    formatSpec = '%*s%f%f%[^\n\r]';
+    fileID = fopen(filename,'r');
+    dataArray = textscan(fileID, formatSpec,512);%, 'Delimiter', delimiter, 'MultipleDelimsAsOne', true, 'EmptyValue' ,NaN, 'ReturnOnError', false);
+    fclose(fileID);
+    IVALUE = dataArray{:, 1};
+    QVALUE = dataArray{:, 2};
+%     IVALUE_DEC=IVALUE-mean(IVALUE);
+%     QVALUE_DEC=QVALUE-mean(QVALUE);
+    IVALUE_DEC=IVALUE;
+    QVALUE_DEC=QVALUE;
+    IQVALUE_DEC=IVALUE_DEC(1:512)-j*QVALUE_DEC(1:512);
+    IQVALUE_DEC=IQVALUE_DEC./abs(IQVALUE_DEC);
+    IQVALUE_DEC=IQVALUE_DEC';
+    
+    %%   
+    figure('Name', 'Orig IQ Value','NumberTitle', 'off')
+    hold on;
+    plot(real(IQVALUE_DEC),'b')
+    plot(imag(IQVALUE_DEC),'r')
+%     plot(IVALUE,'b')
+%     plot(QVALUE,'r')
+    hold off;
+
+     %% slot计算设置
+     fsample=4e6;                                   %采样率 //4e6
+     slot_pts=4*fsample/1e6;                         %每4us，采样率是32MHz，存在128个点 //4*fsample/1e6,32
+     slot_num=7;                                     %采集512个点，可以考虑切换6次 //28,3
+     pts_offset=61;                                   %每个solt从offset开始；//60,61
+     pts_calc= slot_pts/2;                           %每个solt取的计算点数，即8个点；//slot_pts/2,120
+
+    %% 分slot提取IQ值和slot内相位
+    for slot_index=1:slot_num
+        for ant_num = 0:2
+            if ant_num == 0 
+                IQVALUE_Slot(slot_index,:)=IQVALUE_DEC(pts_offset+ant_num*slot_pts+(slot_index-1)*48:pts_offset+pts_calc-1+ant_num*slot_pts+(slot_index-1)*48);
+            else
+                temp = 
+            end
+        end
+    end
+    IQVALUE_Slot
+
+     calc_slot_num=slot_num;
+     phase=0;
+     figure('Name', 'Phase_Diff_Slot','NumberTitle', 'off')
+     hold on;
+     
+     for calc_slot_num=2:slot_num
+
+        for slot_index=2:calc_slot_num
+         if slot_index==2
+            IQ_Diff_Slot=IQVALUE_Slot(slot_index,:).*conj(IQVALUE_Slot(slot_index-1,:));
+            Phase_Diff_Slot=atan2d(imag(IQ_Diff_Slot),real(IQ_Diff_Slot));
+            plot(Phase_Diff_Slot);
+
+         else
+             tmp=IQVALUE_Slot(slot_index,:).*conj(IQVALUE_Slot(slot_index-1,:));
+             IQ_Diff_Slot=[IQ_Diff_Slot;tmp];
+             if mod(slot_index,2)==1
+                Phase_Diff_Slot=[Phase_Diff_Slot;-atan2d(imag(tmp),real(tmp))];
+             else
+                 Phase_Diff_Slot=[Phase_Diff_Slot;atan2d(imag(tmp),real(tmp))];
+             end
+             plot(Phase_Diff_Slot(slot_index-1,:));
+
+         end
+
+        end
+
+        if calc_slot_num==2
+            phase=mean2(Phase_Diff_Slot);
+        else
+            phase=[phase,mean2(Phase_Diff_Slot)];
+        end
+
+     end
+     mean(phase)
+     phase_TEST=mean2(Phase_Diff_Slot)
+
+     Phase_Diff_Slot_circle = Phase_Diff_Slot(:);
+             figure('name', 'sort_circle')
+                  plot(Phase_Diff_Slot_circle)
+
+    Phase_Diff_Slot_sort = sort(Phase_Diff_Slot_circle);
+%         figure('name', 'sort')
+%             plot(Phase_Diff_Slot_sort)

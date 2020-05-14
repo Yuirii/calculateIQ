@@ -27,13 +27,15 @@ function main
      %% Calc
     offset = 60;
     sum_phase = 0; %¼ì²é²ÎÊý
-    for r = 1 : 14
-        for i = 0 : 7
-            phase_diff(1,(r-1)*8+i+1)= (AngleComplexProductComp(IVALUE(16*(2*r-1)+offset+i),QVALUE(16*(2*r-1)+offset+i),IVALUE(16*(2*r-2)+offset+i),QVALUE(16*(2*r-2)+offset+i)));
-            sum_phase = sum_phase+phase_diff(1,(r-1)*8+i+1);        
-            16*(2*r-1)+offset+i;%check
-            16*(2*r-2)+offset+i;
-            
+    for ant = 0 : 2
+        for r = 1 : 14
+            for i = 0 : 7
+                phase_diff(1,(r-1)*8+i+1)= (AngleComplexProductComp(IVALUE(16*(2*r-1)+offset+i),QVALUE(16*(2*r-1)+offset+i),IVALUE(16*(2*r-2)+offset+i),QVALUE(16*(2*r-2)+offset+i)));
+                sum_phase = sum_phase+phase_diff(1,(r-1)*8+i+1);        
+                16*(2*r-1)+offset+i;%check
+                16*(2*r-2)+offset+i;
+
+            end
         end
     end
     phase_diff;
